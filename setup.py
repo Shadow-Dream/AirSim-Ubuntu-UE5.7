@@ -17,6 +17,7 @@ setup(
         "msgpack-python==0.5.6",
         "msgpack-rpc-python==0.4.1",
         "tornado==4.5.3",
+        "backports.ssl-match-hostname>=3.7.0.1",
     ],
     extras_require={
         "opencv": ["opencv-python-headless>=4.8"],
