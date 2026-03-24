@@ -1,5 +1,7 @@
 # AirSim-Ubuntu-UE5.7
 
+Thanks [Colosseum](https://github.com/CodexLabsLLC/Colosseum/).
+
 This repository is the release bundle for the Ubuntu + Unreal Engine 5.7 AirSim integration validated in this workspace.
 
 It contains three parts:
