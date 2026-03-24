@@ -1,27 +1,41 @@
 # AirSim-Ubuntu-UE5.7
 
-Standalone Python client package for the AirSim integration used in this Ubuntu + Unreal Engine 5.7 workspace.
+This repository is the release bundle for the Ubuntu + Unreal Engine 5.7 AirSim integration validated in this workspace.
 
-It keeps the usual `import airsim` workflow and includes the locally added RPC wrappers used by the current simulator build:
+It contains three parts:
 
-- `simAddLabel(pose, size, color_rgba)`
-- `simDestroyLabel(label_id)`
-- `simDestroyAllLabels()`
-- `simNotifyImageCapturesSceneChanged()`
+- a pip-installable Python client package that keeps the usual `import airsim`
+- the Unreal plugin source and content under `Unreal/Plugins/AirSim`
+- example settings and integration docs
 
-The package is intended for direct installation from GitHub:
+## Repository Layout
+
+- `airsim/`
+  Python client package
+- `setup.py`, `pyproject.toml`
+  package metadata so `pip install git+...` works directly from this repository
+- `Unreal/Plugins/AirSim/`
+  Unreal plugin to copy into your UE project
+- `examples/settings/`
+  validated example settings files
+- `docs/`
+  integration, extension API, and validation notes
+
+## Python Client
+
+Install directly from GitHub:
+
+```bash
+pip install "git+https://github.com/Shadow-Dream/AirSim-Ubuntu-UE5.7.git"
+```
+
+Or over SSH:
 
 ```bash
 pip install "git+ssh://git@github.com/Shadow-Dream/AirSim-Ubuntu-UE5.7.git"
 ```
 
-## Install
-
-```bash
-pip install "git+ssh://git@github.com/Shadow-Dream/AirSim-Ubuntu-UE5.7.git"
-```
-
-## Usage
+Minimal usage:
 
 ```python
 import airsim
@@ -30,14 +44,80 @@ client = airsim.VehicleClient()
 client.confirmConnection()
 ```
 
-## Notes
+The module name remains `airsim`, so existing scripts do not need to change imports.
 
-- Validated in the UE5.7 workspace on `2026-03-24`.
-- Tested with Python `3.10` and `3.12`.
-- This repository packages the Python client only. It does not contain the Unreal plugin / C++ simulator code.
-- The module name remains `airsim`, so existing scripts can continue using `import airsim`.
-- `write_png()` uses OpenCV only when called. If you need that helper, install the optional extra:
+Current local extensions exposed by the Python client include:
+
+- `simAddLabel(pose, size, color_rgba)`
+- `simDestroyLabel(label_id)`
+- `simDestroyAllLabels()`
+- `simNotifyImageCapturesSceneChanged()`
+
+If you need `write_png()`, install the optional OpenCV extra:
 
 ```bash
 pip install "git+ssh://git@github.com/Shadow-Dream/AirSim-Ubuntu-UE5.7.git#egg=airsim-ubuntu-ue5-7[opencv]"
 ```
+
+## Unreal Plugin
+
+Copy:
+
+- `Unreal/Plugins/AirSim`
+
+into:
+
+- `<YourProject>/Plugins/AirSim`
+
+Then build your project and use:
+
+- `/Script/AirSim.AirSimGameMode`
+
+as the generic AirSim game mode for portability validation.
+
+For the first smoke test, prefer:
+
+- `/Engine/Maps/Templates/OpenWorld.OpenWorld`
+
+instead of the plugin sample map.
+
+## Example Settings
+
+Included example files:
+
+- `examples/settings/smoke.multirotor.json`
+- `examples/settings/smoke.computervision.json`
+- `examples/settings/settings.multirotor.lowq.json`
+- `examples/settings/settings.computervision.lowq.json`
+
+Recommended usage:
+
+- use the `smoke.*.json` files for a clean-project first validation
+- use the `settings.*.lowq.json` files as a reference for the current CitySample-oriented low-quality profile
+
+## Validation Status
+
+Validated in the UE5.7 Linux workspace on `2026-03-24`:
+
+- `Multirotor` control and capture path working
+- `ComputerVision` mode working with live pose-driven image refresh
+- clean-project reuse validated on a fresh UE project using `OpenWorld + AirSimGameMode`
+- camera-relative transform and additional camera settings exposed through config
+- label add/delete APIs and explicit scene-refresh notify API working
+
+## Docs
+
+- [Quickstart](docs/quickstart.md)
+- [Camera Config And Label APIs](docs/camera-config-and-label-apis.md)
+- [Validation Summary](docs/validation-summary.md)
+
+## Packaging Notes
+
+This repository intentionally excludes generated Unreal build artifacts and unnecessary Win64 prebuilt libraries from the published plugin tree:
+
+- no `Intermediate/`
+- no `Binaries/`
+- no historical local `.bak*` files
+- no unused Win64 `.lib/.pdb/.bsc/.idb` dependency payloads
+
+That keeps the repo smaller while preserving the validated Linux UE5.7 source plugin.

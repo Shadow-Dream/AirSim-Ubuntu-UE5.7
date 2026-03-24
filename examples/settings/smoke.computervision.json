@@ -1,0 +1,35 @@
+{
+  "SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/main/docs/settings.md",
+  "SettingsVersion": 1.2,
+  "SimMode": "ComputerVision",
+  "ClockSpeed": 1.0,
+  "ViewMode": "NoDisplay",
+  "CameraDefaults": {
+    "CaptureSettings": [
+      {
+        "ImageType": 0,
+        "Width": 640,
+        "Height": 480,
+        "FOV_Degrees": 90,
+        "AutoExposureSpeed": 100,
+        "MotionBlurAmount": 0
+      },
+      {
+        "ImageType": 1,
+        "Width": 320,
+        "Height": 240,
+        "FOV_Degrees": 90
+      }
+    ]
+  },
+  "Vehicles": {
+    "cv_1": {
+      "VehicleType": "ComputerVision",
+      "AutoCreate": true,
+      "AllowAPIAlways": true,
+      "EnableCollisions": false,
+      "IsFpvVehicle": true,
+      "StrictSceneFreshnessAfterPoseChange": true
+    }
+  }
+}

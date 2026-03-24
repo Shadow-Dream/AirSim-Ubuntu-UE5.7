@@ -6,3 +6,6 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+Unreal/**/Binaries/
+Unreal/**/Intermediate/
+Unreal/**/*.bak*
