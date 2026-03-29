@@ -99,18 +99,21 @@ Recommended usage:
 
 ## Validation Status
 
-Validated in the UE5.7 Linux workspace on `2026-03-24`:
+Validated in the UE5.7 Linux workspace through `2026-03-29`:
 
 - `Multirotor` control and capture path working
 - `ComputerVision` mode working with live pose-driven image refresh
 - clean-project reuse validated on a fresh UE project using `OpenWorld + AirSimGameMode`
 - camera-relative transform and additional camera settings exposed through config
 - label add/delete APIs and explicit scene-refresh notify API working
+- `DepthPlanar` repaired to use native scene depth instead of lighting-coupled post-process output
+- `DepthPlanar` metric float readback and synthesized PNG visualization both repaired for UE5.7
 
 ## Docs
 
 - [Quickstart](docs/quickstart.md)
 - [Camera Config And Label APIs](docs/camera-config-and-label-apis.md)
+- [Depth Planar Fix](docs/depth-planar-fix.md)
 - [Validation Summary](docs/validation-summary.md)
 
 ## Packaging Notes

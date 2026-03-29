@@ -2,10 +2,11 @@
 
 ## Current Validated State
 
-Validated on `2026-03-24` in the UE5.7 Linux workspace:
+Validated through `2026-03-29` in the UE5.7 Linux workspace:
 
 - `Multirotor` mode is usable
 - `ComputerVision` mode is usable
+- `DepthPlanar` is back on a geometric depth path instead of a lighting-coupled image path
 - the Python client package installs and imports in a clean Python `3.12` virtual environment
 - the plugin can be migrated into a clean Unreal project
 
@@ -35,6 +36,8 @@ Validated local extensions:
 - additional `CineCameraSettings`
 - label add/delete APIs
 - explicit `simNotifyImageCapturesSceneChanged()`
+- native `DepthPlanar` scene-depth capture with local `cm -> m` conversion
+- UE5.7-safe PNG depth visualization export without deprecated thumbnail compression
 
 ## Important Limits
 

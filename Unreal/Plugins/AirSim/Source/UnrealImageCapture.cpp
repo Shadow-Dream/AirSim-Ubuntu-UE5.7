@@ -19,6 +19,8 @@ using ImageType = msr::airlib::ImageCaptureBase::ImageType;
 
 constexpr bool kEnableLatestFrameCache = true;
 constexpr float kDepthVisualizationRejectSentinelMeters = 60000.0f;
+constexpr float kNativeSceneDepthNoHitThresholdCentimeters = 65000.0f;
+constexpr float kNativeSceneDepthCentimetersToMeters = 0.01f;
 constexpr float kDepthVisualizationNearPercentile = 0.01f;
 constexpr float kDepthVisualizationFarPercentile = 0.97f;
 constexpr msr::airlib::TTimePoint kSceneLatestFrameFallbackIntervalNanos = 50ll * 1000ll * 1000ll;
@@ -55,6 +57,32 @@ ImageType GetDepthCaptureSourceType(const ImageRequest& Request)
 bool IsRenderableDepthValue(const float Depth)
 {
     return FMath::IsFinite(Depth) && Depth > KINDA_SMALL_NUMBER && Depth < kDepthVisualizationRejectSentinelMeters;
+}
+
+float ConvertNativeSceneDepthCmToAirSimMeters(const float DepthCm)
+{
+    if (!FMath::IsFinite(DepthCm)) {
+        return DepthCm;
+    }
+
+    if (DepthCm >= kNativeSceneDepthNoHitThresholdCentimeters) {
+        return kDepthVisualizationRejectSentinelMeters + 1.0f;
+    }
+
+    return DepthCm * kNativeSceneDepthCentimetersToMeters;
+}
+
+bool NeedsNativeSceneDepthUnitFix(const ImageRequest& CaptureRequest)
+{
+    return CaptureRequest.pixels_as_float && CaptureRequest.image_type == ImageType::DepthPlanar;
+}
+
+void ConvertNativeSceneDepthPixelsToAirSimMeters(const TArray<FFloat16Color>& InPixels, TArray<FFloat16Color>& OutPixels)
+{
+    OutPixels = InPixels;
+    for (FFloat16Color& Pixel : OutPixels) {
+        Pixel.R = ConvertNativeSceneDepthCmToAirSimMeters(Pixel.R.GetFloat());
+    }
 }
 
 bool AreCaptureRequestsEquivalent(const ImageRequest& A, const ImageRequest& B)
@@ -208,7 +236,7 @@ void BuildDepthVisImage(const TArray<FFloat16Color>& DepthPixels, int32 Width, i
 
     if (bCompress) {
         TArray<uint8> CompressedPng;
-        FImageUtils::CompressImageArray(Width, Height, DepthBitmap, CompressedPng);
+        UAirBlueprintLib::CompressImageArray(Width, Height, DepthBitmap, CompressedPng);
         OutImageData.assign(CompressedPng.GetData(), CompressedPng.GetData() + CompressedPng.Num());
         return;
     }
@@ -392,14 +420,28 @@ void UnrealImageCapture::getSceneCaptureImage(const std::vector<msr::airlib::Ima
         if (RenderIndex != INDEX_NONE) {
             const auto& RenderResult = render_results[RenderIndex];
             response.time_stamp = RenderResult->time_stamp;
+            const ImageRequest& CaptureRequest = capture_requests[CaptureIndex];
+            const bool bNeedsNativeSceneDepthUnitFix = NeedsNativeSceneDepthUnitFix(CaptureRequest);
 
             if (ShouldSynthesizeDepthImage(request)) {
-                BuildDepthVisImage(RenderResult->bmp_float, RenderResult->width, RenderResult->height, request.compress, response.image_data_uint8);
+                if (bNeedsNativeSceneDepthUnitFix) {
+                    TArray<FFloat16Color> ConvertedDepthPixels;
+                    ConvertNativeSceneDepthPixelsToAirSimMeters(RenderResult->bmp_float, ConvertedDepthPixels);
+                    BuildDepthVisImage(ConvertedDepthPixels, RenderResult->width, RenderResult->height, request.compress, response.image_data_uint8);
+                }
+                else {
+                    BuildDepthVisImage(RenderResult->bmp_float, RenderResult->width, RenderResult->height, request.compress, response.image_data_uint8);
+                }
                 response.image_data_float.clear();
             }
             else {
                 response.image_data_uint8 = std::vector<uint8_t>(RenderResult->image_data_uint8.GetData(), RenderResult->image_data_uint8.GetData() + RenderResult->image_data_uint8.Num());
                 response.image_data_float = std::vector<float>(RenderResult->image_data_float.GetData(), RenderResult->image_data_float.GetData() + RenderResult->image_data_float.Num());
+                if (bNeedsNativeSceneDepthUnitFix) {
+                    for (float& DepthMeters : response.image_data_float) {
+                        DepthMeters = ConvertNativeSceneDepthCmToAirSimMeters(DepthMeters);
+                    }
+                }
             }
 
             response.width = RenderResult->width;
@@ -817,7 +859,7 @@ void UnrealImageCapture::addScreenCaptureHandler(UWorld* world)
                     Color.A = 255;
 
                 TArray<uint8_t> last_compressed_png;
-                FImageUtils::CompressImageArray(SizeX, SizeY, RefBitmap, last_compressed_png);
+                UAirBlueprintLib::CompressImageArray(SizeX, SizeY, RefBitmap, last_compressed_png);
                 last_compressed_png_ = std::vector<uint8_t>(last_compressed_png.GetData(), last_compressed_png.GetData() + last_compressed_png.Num());
             });
 

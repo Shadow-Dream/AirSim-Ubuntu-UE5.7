@@ -155,9 +155,19 @@ void APIPCamera::BeginPlay()
         if (CaptureComponent != nullptr) {
             switch (static_cast<ImageType>(image_type)) {
             case ImageType::DepthPlanar:
+                // Prefer UE's native scene-depth output for planar depth. The previous
+                // post-process material path was sensitive to transparency / glass and
+                // could yield locally implausible depths even after the lighting-coupling
+                // regression was fixed.
+                CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_SceneDepth;
+                break;
+
             case ImageType::DepthPerspective:
             case ImageType::DepthVis:
             case ImageType::DisparityNormalized:
+                // These analytic captures still rely on post-process materials running
+                // in a linear pre-tonemap stage. Keep the capture source HDR so float
+                // readback preserves metric range instead of clipping to [0, 1].
                 CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorHDR;
                 break;
 
